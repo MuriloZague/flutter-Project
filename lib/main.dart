@@ -23,7 +23,7 @@ class SistemaAcademicoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Sistema Acadêmico',
+      title: 'Sistema cálculo IMC',
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: 'Roboto',
@@ -78,58 +78,70 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _formKey = GlobalKey<FormState>();
 
-  final _raController = TextEditingController();
   final _nomeController = TextEditingController();
-  final _disciplinaController = TextEditingController();
-  final _trabalhoController = TextEditingController();
-  final _avaliacaoController = TextEditingController();
+  final _pesoController = TextEditingController();
+  final _alturaController = TextEditingController();
 
-  double? _media;
+  double? _imc;
   String? _situacao;
 
   @override
   void dispose() {
-    _raController.dispose();
     _nomeController.dispose();
-    _disciplinaController.dispose();
-    _trabalhoController.dispose();
-    _avaliacaoController.dispose();
+    _pesoController.dispose();
+    _alturaController.dispose();
 
     super.dispose();
   }
 
-  void calcularMedia() {
+  void calcularIMC() {
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final double trabalho =
-        double.parse(_trabalhoController.text.replaceAll(',', '.'));
+    final double peso =
+        double.parse(_pesoController.text.replaceAll(',', '.'));
 
-    final double avaliacao =
-        double.parse(_avaliacaoController.text.replaceAll(',', '.'));
+    final double altura =
+        double.parse(_alturaController.text.replaceAll(',', '.'));
 
-    final double media = (trabalho * 4 + avaliacao * 6) / 10;
+    final double imc = peso / (altura * altura);
 
     setState(() {
-      _media = media;
-      _situacao = media >= 6 ? 'Aprovado' : 'Reprovado';
+      _imc = imc;
+      _situacao = classificarIMC(imc);
     });
   }
+
+  String classificarIMC(double imc) {
+    if (imc < 18.5) return 'Abaixo do peso';
+    if (imc < 25) return 'Peso normal';
+    if (imc < 30) return 'Sobrepeso';
+    if (imc < 35) return 'Obesidade grau I';
+    if (imc < 40) return 'Obesidade grau II';
+    return 'Obesidade grau III';
+  }
+
+  /// Cor associada à faixa: verde (normal), âmbar (limítrofe), vermelho (obesidade).
+  Color corIMC(double imc) {
+    if (imc < 18.5) return const Color(0xFFF79009); // âmbar
+    if (imc < 25) return AppColors.success; // verde
+    if (imc < 30) return const Color(0xFFF79009); // âmbar
+    return AppColors.danger; // vermelho
+  }
+
 
   void limparCampos() {
     _formKey.currentState?.reset();
 
-    _raController.clear();
     _nomeController.clear();
-    _disciplinaController.clear();
-    _trabalhoController.clear();
-    _avaliacaoController.clear();
+    _pesoController.clear();
+    _alturaController.clear();
 
     setState(() {
-      _media = null;
+      _imc = null;
       _situacao = null;
     });
   }
@@ -154,79 +166,31 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // DADOS DO ALUNO
+                          // DADOS DA PESSOA
                           _buildCard(
-                            title: 'Dados do Aluno',
+                            title: 'Dados da Pessoa:',
                             icon: Icons.person_outline,
                             children: [
                               _buildTextField(
-                                controller: _raController,
-                                label: 'RA do Aluno',
-                                hint: 'Digite o RA',
-                                icon: Icons.badge_outlined,
-                              ),
-                              _buildTextField(
                                 controller: _nomeController,
-                                label: 'Nome do Aluno',
-                                hint: 'Digite o nome completo',
+                                label: 'Nome da Pessoa',
+                                hint: 'Digite o nome',
                                 icon: Icons.person_outline,
                               ),
                               _buildTextField(
-                                controller: _disciplinaController,
-                                label: 'Disciplina',
-                                hint: 'Digite o nome da disciplina',
-                                icon: Icons.menu_book_outlined,
+                                controller: _pesoController,
+                                label: 'Peso da pessoa (KG)',
+                                hint: 'Digite o peso',
+                                icon: Icons.fitness_center_outlined,
+                                numerico: true,
+                              ),
+                              _buildTextField(
+                                controller: _alturaController,
+                                label: 'Altura da pessoa (M)',
+                                hint: 'Digite a altura',
+                                icon: Icons.height_outlined,
                                 isLast: true,
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 18),
-
-                          // NOTAS
-                          _buildCard(
-                            title: 'Notas',
-                            icon: Icons.grade_outlined,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: _buildNotaField(
-                                      controller: _trabalhoController,
-                                      label: 'Trabalho',
-                                      icon: Icons.assignment_outlined,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: _buildNotaField(
-                                      controller: _avaliacaoController,
-                                      label: 'Avaliação',
-                                      icon: Icons.fact_check_outlined,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.info_outline,
-                                    size: 15,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      'Peso: Trabalho 40% · Avaliação 60%',
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                numerico: true,
                               ),
                             ],
                           ),
@@ -248,7 +212,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               );
                             },
-                            child: _media == null
+                            child: _imc == null
                                 ? const SizedBox.shrink()
                                 : Padding(
                                     padding: const EdgeInsets.only(top: 24),
@@ -293,7 +257,7 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
-                  Icons.school_rounded,
+                  Icons.monitor_weight_outlined,
                   color: Colors.white,
                   size: 28,
                 ),
@@ -304,7 +268,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sistema Acadêmico',
+                      'Sistema de IMC',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -313,7 +277,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Cálculo de média',
+                      'Índice de Massa Corporal',
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
@@ -334,7 +298,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 26),
           const Text(
-            'Informe os dados do aluno e as notas para\ncalcular a média final.',
+            'Informe seu peso e altura para\ncalcular o IMC.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -407,6 +371,7 @@ class _HomePageState extends State<HomePage> {
     required String hint,
     required IconData icon,
     bool isLast = false,
+    bool numerico = false,
   }) {
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
@@ -414,6 +379,9 @@ class _HomePageState extends State<HomePage> {
         controller: controller,
         textInputAction:
             isLast ? TextInputAction.done : TextInputAction.next,
+        keyboardType: numerico
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : TextInputType.text,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
@@ -423,42 +391,20 @@ class _HomePageState extends State<HomePage> {
           if (value == null || value.trim().isEmpty) {
             return 'Campo obrigatório';
           }
+
+          if (numerico) {
+            final numero = double.tryParse(value.replaceAll(',', '.'));
+            if (numero == null) {
+              return 'Valor inválido';
+            }
+            if (numero <= 0) {
+              return 'Deve ser maior que zero';
+            }
+          }
+
           return null;
         },
       ),
-    );
-  }
-
-  Widget _buildNotaField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: '0 a 10',
-        prefixIcon: Icon(icon),
-      ),
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Informe a nota';
-        }
-
-        final nota = double.tryParse(value.replaceAll(',', '.'));
-
-        if (nota == null) {
-          return 'Nota inválida';
-        }
-
-        if (nota < 0 || nota > 10) {
-          return 'Entre 0 e 10';
-        }
-
-        return null;
-      },
     );
   }
 
@@ -482,7 +428,7 @@ class _HomePageState extends State<HomePage> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: calcularMedia,
+          onTap: calcularIMC,
           child: const Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -490,7 +436,7 @@ class _HomePageState extends State<HomePage> {
                 Icon(Icons.calculate_rounded, color: Colors.white),
                 SizedBox(width: 10),
                 Text(
-                  'CALCULAR MÉDIA',
+                  'CALCULAR IMC',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -507,8 +453,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildResultado() {
-    final bool aprovado = _situacao == 'Aprovado';
-    final Color cor = aprovado ? AppColors.success : AppColors.danger;
+    final Color cor = corIMC(_imc!);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -529,10 +474,9 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.emoji_events_outlined, size: 18, color: cor),
               const SizedBox(width: 6),
               const Text(
-                'Resultado Final',
+                'Resultado',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -551,7 +495,7 @@ class _HomePageState extends State<HomePage> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              aprovado ? Icons.check_rounded : Icons.close_rounded,
+              Icons.monitor_weight_outlined,
               size: 52,
               color: cor,
             ),
@@ -572,7 +516,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 4),
 
           Text(
-            'RA ${_raController.text}  ·  ${_disciplinaController.text}',
+            'Peso ${_pesoController.text} kg  ·  Altura ${_alturaController.text} m',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textSecondary,
@@ -586,7 +530,7 @@ class _HomePageState extends State<HomePage> {
           ),
 
           const Text(
-            'MÉDIA FINAL',
+            'SEU IMC',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -598,7 +542,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 6),
 
           Text(
-            _media!.toStringAsFixed(2),
+            _imc!.toStringAsFixed(2),
             style: TextStyle(
               fontSize: 48,
               fontWeight: FontWeight.bold,
@@ -609,11 +553,11 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 16),
 
-          // Barra de progresso da média (0 a 10)
+          // Barra de progresso do IMC (escala 0 a 40)
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: (_media! / 10).clamp(0.0, 1.0)),
+              tween: Tween(begin: 0, end: (_imc! / 40).clamp(0.0, 1.0)),
               duration: const Duration(milliseconds: 600),
               curve: Curves.easeOut,
               builder: (context, value, _) {
@@ -639,7 +583,7 @@ class _HomePageState extends State<HomePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  aprovado ? Icons.verified_rounded : Icons.error_rounded,
+                  Icons.info_outline_rounded,
                   size: 18,
                   color: cor,
                 ),
