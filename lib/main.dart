@@ -4,7 +4,6 @@ void main() {
   runApp(const SistemaAcademicoApp());
 }
 
-/// Paleta central do app — mantém as cores consistentes em toda a tela.
 class AppColors {
   static const Color primary = Color(0xFF6C4DF6);
   static const Color primaryDark = Color(0xFF4B2FD1);
@@ -124,14 +123,12 @@ class _HomePageState extends State<HomePage> {
     return 'Obesidade grau III';
   }
 
-  /// Cor associada à faixa: verde (normal), âmbar (limítrofe), vermelho (obesidade).
   Color corIMC(double imc) {
-    if (imc < 18.5) return const Color(0xFFF79009); // âmbar
-    if (imc < 25) return AppColors.success; // verde
-    if (imc < 30) return const Color(0xFFF79009); // âmbar
-    return AppColors.danger; // vermelho
+    if (imc < 18.5) return const Color(0xFFF79009);
+    if (imc < 25) return AppColors.success;
+    if (imc < 30) return const Color(0xFFF79009);
+    return AppColors.danger;
   }
-
 
   void limparCampos() {
     _formKey.currentState?.reset();
@@ -199,7 +196,6 @@ class _HomePageState extends State<HomePage> {
 
                           _buildActions(),
 
-                          // RESULTADO
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 350),
                             transitionBuilder: (child, animation) {
@@ -553,7 +549,6 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 16),
 
-          // Barra de progresso do IMC (escala 0 a 40)
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: TweenAnimationBuilder<double>(
